@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+message LidarDetectionList {
+  int64 sensor_timestamp_us = 1;
+  int64 system_timestamp_us = 2;
+  int64 system_timestamp_detection_us = 3;
+  int32 num_detections = 4;
+  repeated LidarDetection lidar_detections = 5;
+}
+
+message LidarDetection {
+  float x_coordinate_m = 1;
+  float y_coordinate_m = 2;
+  float z_coordinate_m = 3;
+  float height_m = 4;
+  float size_m2 = 5;
+  float aspect_ratio = 6;
+  float orientation_deg = 7;
+  int32 reflectance = 8;
+  int32 num_points = 9;
+}
