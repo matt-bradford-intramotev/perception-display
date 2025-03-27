@@ -18,6 +18,13 @@ ZMIN = 0
 ZMAX = 3
 HMAX = 2.3
 
+# Display settings
+DEFAULT_AZ = 30
+DEFAULT_EL = 30
+DEFAULT_ZOOM = 1.5
+DO_SET_DEFAULT_VIEW = False
+DO_PRINT_CURRENT_VIEW = True
+
 # Jetson IP 
 if len(sys.argv) < 2:
     print("Using default IP 192.168.1.21 (TrinFlo A)")
@@ -77,11 +84,17 @@ z_array = np.array([0,4])
 r_array = np.array([1,1])
 points = np.vstack((x_array,y_array,z_array)).T
 
+# Set up window
 eng = matlab.engine.start_matlab()
 eng.eval(f"lidarviewer = pcplayer([{XMIN} {XMAX}],[{YMIN} {YMAX}],[{ZMIN} {ZMAX}])", nargout=0)
 
 eng.eval("figHandle = ancestor(lidarviewer.Axes, 'figure');", nargout=0)
 eng.eval("figHandle.WindowState = 'maximized';", nargout=0)
+
+if DO_SET_DEFAULT_VIEW:
+    eng.eval("ax = lidarviewer.Axes;", nargout=0)
+    eng.eval(f"view(ax, {DEFAULT_AZ}, {DEFAULT_EL});", nargout=0)
+    eng.eval(f"camzoom(ax, {DEFAULT_ZOOM});", nargout=0)
 
 pubsub = r.pubsub()
 if DO_DETS:
@@ -143,9 +156,10 @@ for message in pubsub.listen():
             eng.drawnow(nargout=0)
 
             # Print current az, el, zoom
-            eng.eval("[az, el] = view(lidarviewer.Axes);", nargout=0)
-            eng.eval("zoomVal = camva(lidarviewer.Axes);", nargout=0)
-            eng.eval("fprintf('Az = %.2f°, El = %.2f°, Zoom (FOV) = %.2f°\\n', az, el, zoomVal);", nargout=0)
+            if DO_PRINT_CURRENT_VIEW:
+                eng.eval("[az, el] = view(lidarviewer.Axes);", nargout=0)
+                eng.eval("zoomVal = camva(lidarviewer.Axes);", nargout=0)
+                eng.eval("fprintf('Az = %.2f°, El = %.2f°, Zoom (FOV) = %.2f°\\n', az, el, zoomVal);", nargout=0)
 
             print(f"Time to process and display: {(time.time() - timer_start)*1e3} ms")
             
